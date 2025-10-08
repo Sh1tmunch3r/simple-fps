@@ -1,0 +1,63 @@
+[gd_scene load_steps=3 format=3 uid="uid://djfur3weut0sv"]
+
+[ext_resource type="Script" uid="uid://crd3itfkqgi3p" path="res://Scripts/main.gd" id="1_r150o"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_idj7w"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_r150o")
+
+[node name="TitleLabel" type="Label" parent="Control"]
+layout_mode = 0
+offset_left = 228.0
+offset_top = 29.0
+offset_right = 323.0
+offset_bottom = 54.0
+text = "Simple FPS"
+uppercase = true
+
+[node name="IPLabel" type="Label" parent="Control"]
+layout_mode = 0
+offset_left = 206.0
+offset_top = 4.0
+offset_right = 338.0
+offset_bottom = 27.0
+text = "Your IP: 127.0.0.1"
+label_settings = SubResource("LabelSettings_idj7w")
+
+[node name="HostButton" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 386.0
+offset_top = 119.0
+offset_right = 496.0
+offset_bottom = 150.0
+text = "Host Game"
+
+[node name="JoinButton" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 286.0
+offset_top = 119.0
+offset_right = 373.0
+offset_bottom = 151.0
+text = "Join Game"
+
+[node name="IPInput" type="LineEdit" parent="Control"]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 119.0
+offset_right = 267.0
+offset_bottom = 150.0
+placeholder_text = "Enter IP Address"
+
+[node name="ErrorDialog" type="AcceptDialog" parent="Control"]
+
+[node name="StatusLabel" type="Label" parent="Control"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
