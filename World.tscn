@@ -1,17 +1,17 @@
 [gd_scene load_steps=3 format=3 uid="uid://72bcmcc7o0i"]
 
-[ext_resource type="Script" uid="uid://bphkt4etoh4b4" path="res://Scripts/game_manager.gd" id="1_5cjrv"]
-[ext_resource type="PackedScene" uid="uid://chjsy4xnke7tw" path="res://Scenes/Player.tscn" id="2_5nsto"]
+[ext_resource type="Script" path="res://world.gd" id="1_world"]
+[ext_resource type="PackedScene" uid="uid://chjsy4xnke7tw" path="res://Player.tscn" id="2_player"]
 
-[node name="World" type="Node2D"]
-script = ExtResource("1_5cjrv")
-player_scene = ExtResource("2_5nsto")
+[node name="World" type="Node3D"]
+script = ExtResource("1_world")
+player_scene = ExtResource("2_player")
 
-[node name="Node3D" type="Node3D" parent="."]
-
-[node name="Floor" type="CSGBox3D" parent="Node3D"]
+[node name="Floor" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
 size = Vector3(50, 1, 50)
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node3D"]
-script = ExtResource("1_5cjrv")
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 5)
+shadow_enabled = true
