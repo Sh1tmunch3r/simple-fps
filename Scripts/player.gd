@@ -97,9 +97,7 @@ func place_block():
 	var origin = camera.global_position
 	var end = origin + (-camera.global_transform.basis.z * PLACEMENT_DISTANCE)
 	
-	var query = PhysicsRayQuery3D.new()
-	query.from = origin
-	query.to = end
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	query.collision_mask = 3  # Same as player collision mask
 	
 	var result = space_state.intersect_ray(query)
