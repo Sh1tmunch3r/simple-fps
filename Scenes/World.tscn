@@ -1,13 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://72bcmcc7o0i"]
+[gd_scene load_steps=3 format=3 uid="uid://72bcmcc7o0i"]
 
 [ext_resource type="Script" uid="uid://bopnfdveky5vf" path="res://Scripts/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://chjsy4xnke7tw" path="res://Scenes/Player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://xj7rkokm1yei" path="res://Scenes/block.tscn" id="3_5nsto"]
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5nsto"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_gjpho"]
-size = Vector3(0.635376, 0.089393616, 0.15930176)
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -23,16 +18,16 @@ transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 
 shadow_enabled = true
 
 [node name="Block" parent="." instance=ExtResource("3_5nsto")]
-transform = Transform3D(2.9775004, 0, 0, 0, 4.664313, 0, 0, 0, 2.8050575, 5.214675, 0.0008334592, 4.825406)
-collision_layer = 3
-collision_mask = 3
-gravity_space_override = 1
-wind_force_magnitude = 0.094
-wind_source_path = NodePath(".")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 5)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Block"]
-physics_material_override = SubResource("PhysicsMaterial_5nsto")
+[node name="Block2" parent="." instance=ExtResource("3_5nsto")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.5, 5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Block/StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.101745605, 0.04389572, -0.050598145)
-shape = SubResource("BoxShape3D_gjpho")
+[node name="Block3" parent="." instance=ExtResource("3_5nsto")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, -5)
+
+[node name="Block4" parent="." instance=ExtResource("3_5nsto")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.5, -5)
+
+[node name="Block5" parent="." instance=ExtResource("3_5nsto")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
