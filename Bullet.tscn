@@ -17,3 +17,5 @@ shape = SubResource("SphereShape3D_14k46")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("SphereMesh_qvus8")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
