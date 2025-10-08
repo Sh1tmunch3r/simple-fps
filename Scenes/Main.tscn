@@ -1,0 +1,85 @@
+[gd_scene load_steps=5 format=3 uid="uid://djfur3weut0sv"]
+
+[ext_resource type="Script" uid="uid://crd3itfkqgi3p" path="res://Scripts/main.gd" id="1_r150o"]
+
+[sub_resource type="FontVariation" id="FontVariation_r150o"]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_idj7w"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_idj7w"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_r150o")
+
+[node name="TitleLabel" type="Label" parent="Control"]
+modulate = Color(0.607107, 0.732902, 0.811212, 1)
+layout_mode = 0
+offset_left = 224.99998
+offset_top = -4.000001
+offset_right = 425.0
+offset_bottom = 37.0
+scale = Vector2(3.6084685, 5.0157614)
+theme_override_colors/font_color = Color(0.7850708, 0.24000943, 0.4891469, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8039216)
+theme_override_colors/font_outline_color = Color(0.99215686, 1, 0.1882353, 1)
+theme_override_fonts/font = SubResource("FontVariation_r150o")
+theme_override_font_sizes/font_size = 29
+theme_override_styles/normal = SubResource("StyleBoxLine_idj7w")
+text = "Lego shet"
+horizontal_alignment = 1
+uppercase = true
+
+[node name="IPLabel" type="Label" parent="Control"]
+layout_mode = 0
+offset_left = 347.99997
+offset_top = 159.0
+offset_right = 479.99997
+offset_bottom = 182.0
+scale = Vector2(3.6084685, 5.0157614)
+text = "Your IP: 127.0.0.1"
+label_settings = SubResource("LabelSettings_idj7w")
+
+[node name="HostButton" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 596.0
+offset_top = 458.00003
+offset_right = 706.0
+offset_bottom = 489.00003
+scale = Vector2(3.6084685, 5.0157614)
+theme_override_colors/font_color = Color(0.4099121, 0.983556, 0.91512895, 1)
+theme_override_colors/font_focus_color = Color(0.5460022, 0.95629495, 0.5339954, 1)
+text = "Host Game"
+
+[node name="JoinButton" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 129.0
+offset_top = 454.0
+offset_right = 216.0
+offset_bottom = 486.0
+scale = Vector2(3.6084685, 5.0157614)
+theme_override_colors/font_color = Color(0.8745098, 0.5019608, 0.8745098, 1)
+theme_override_colors/font_focus_color = Color(0.89185816, 0.35848784, 0.47615927, 1)
+theme_override_colors/font_pressed_color = Color(0.3019608, 1, 0, 1)
+text = "Join Game"
+
+[node name="IPInput" type="LineEdit" parent="Control"]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 278.0
+offset_right = 359.0
+offset_bottom = 309.0
+scale = Vector2(3.6084685, 5.0157614)
+placeholder_text = "Enter IP Address"
+
+[node name="ErrorDialog" type="AcceptDialog" parent="Control"]
+
+[node name="StatusLabel" type="Label" parent="Control"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
