@@ -1,11 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://xj7rkokm1yei"]
+[gd_scene load_steps=4 format=3 uid="uid://xj7rkokm1yei"]
 
 [ext_resource type="PackedScene" uid="uid://dm52mca68etwj" path="res://Models/FBX format/bevel-hq-brick-2x8.fbx" id="1_ejx3s"]
+[ext_resource type="Script" path="res://Scripts/block.gd" id="2_block"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ejx3s"]
 size = Vector3(0.6381836, 0.09215546, 0.15460205)
 
 [node name="Block" type="Area3D"]
+script = ExtResource("2_block")
 
 [node name="bevel-hq-brick-2x8" parent="." instance=ExtResource("1_ejx3s")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.10117927, 0, -0.0507164)
