@@ -11,9 +11,12 @@ extends CharacterBody3D
 var gravity := 9.8
 
 func _ready():
+	print("[Player] Ready! Peer ID: ", name, ", Authority: ", is_multiplayer_authority())
 	if is_multiplayer_authority():
+		print("[Player] This is the local player, capturing mouse")
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
+		print("[Player] This is a remote player")
 		camera.current = false
 
 func _input(event):
@@ -46,9 +49,8 @@ func _physics_process(delta):
 	move_and_slide()
 
 func shoot():
-	if gun.has_node("AnimationPlayer"):
-		gun.get_node("AnimationPlayer").play("shoot")
-	var bullet_scene = preload("res://Scenes/Bullet.tscn")
+	print("[Player] Shooting from peer: ", multiplayer.get_unique_id())
+	var bullet_scene = preload("res://Bullet.tscn")
 	var bullet = bullet_scene.instantiate()
 	bullet.global_transform = bullet_spawn.global_transform
 	get_tree().current_scene.add_child(bullet)

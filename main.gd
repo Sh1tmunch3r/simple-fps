@@ -14,20 +14,24 @@ func _ready():
 	network_manager.connection_failed.connect(_on_connection_failed)
 
 func _on_host_pressed():
+	print("[Main] Host button pressed")
 	status_lbl.text = "Starting server..."
 	network_manager.host_game()
 
 func _on_join_pressed():
+	print("[Main] Join button pressed, IP: ", ip_input.text)
 	status_lbl.text = "Connecting..."
 	network_manager.join_game(ip_input.text)
 
 func _on_server_started():
 	status_lbl.text = "Server started! Loading game..."
-	get_tree().change_scene_to_file("res://Scenes/World.tscn")
+	print("[Main] Server started, loading World scene...")
+	get_tree().change_scene_to_file("res://World.tscn")
 
 func _on_connected_to_server():
 	status_lbl.text = "Connected! Loading game..."
-	get_tree().change_scene_to_file("res://Scenes/World.tscn")
+	print("[Main] Connected to server, loading World scene...")
+	get_tree().change_scene_to_file("res://World.tscn")
 
 func _on_connection_failed():
 	status_lbl.text = "Connection failed. Try again."
