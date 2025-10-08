@@ -13,11 +13,11 @@ func host_game():
 	var err = peer.create_server(DEFAULT_PORT, MAX_PLAYERS)
 	if err != OK:
 		print("[NetworkManager] Failed to create server: ", err)
-		emit_signal("connection_failed")
+		connection_failed.emit()
 		return
 	multiplayer.multiplayer_peer = peer
 	print("[NetworkManager] Server created successfully, peer ID: ", multiplayer.get_unique_id())
-	emit_signal("server_started")
+	server_started.emit()
 
 func join_game(ip: String):
 	print("[NetworkManager] Connecting to ", ip, ":", DEFAULT_PORT)
@@ -25,7 +25,7 @@ func join_game(ip: String):
 	var err = peer.create_client(ip, DEFAULT_PORT)
 	if err != OK:
 		print("[NetworkManager] Failed to create client: ", err)
-		emit_signal("connection_failed")
+		connection_failed.emit()
 		return
 	multiplayer.multiplayer_peer = peer
 	print("[NetworkManager] Client created, waiting for connection...")
@@ -34,9 +34,9 @@ func _ready():
 	print("[NetworkManager] Ready")
 	multiplayer.connected_to_server.connect(func(): 
 		print("[NetworkManager] Connected to server!")
-		emit_signal("connected_to_server")
+		connected_to_server.emit()
 	)
 	multiplayer.connection_failed.connect(func(): 
 		print("[NetworkManager] Connection failed!")
-		emit_signal("connection_failed")
+		connection_failed.emit()
 	)
