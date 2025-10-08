@@ -160,7 +160,7 @@ Complete testing checklist including:
 - Overlap detection uses same layer
 
 ### Physics Queries
-1. **Placement Raycast** (PhysicsRayQuery3D)
+1. **Placement Raycast** (PhysicsRayQueryParameters3D)
    - Origin: Camera position
    - Direction: Camera forward * 5 units
    - Returns: Hit position and normal
