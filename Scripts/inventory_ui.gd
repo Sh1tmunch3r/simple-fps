@@ -39,14 +39,22 @@ func update_inventory_display():
 	
 	var inv = player.inventory
 	var text = "=== INVENTORY ===\n"
+	text += "Health: " + str(int(player.health)) + "/" + str(int(player.max_health)) + "\n"
 	text += "Blocks: " + str(inv["blocks"]) + "\n"
-	text += "Red Blocks: " + str(inv["red_blocks"]) + "\n"
-	text += "Blue Blocks: " + str(inv["blue_blocks"]) + "\n"
+	text += "Block2: " + str(inv["block2"]) + "\n"
 	text += "Items: " + str(inv["items"]) + "\n"
 	text += "\nTool: " + player.current_tool.to_upper()
 	
-	if player.current_tool == "block_placer":
+	if player.current_tool == "gun":
+		if player.is_reloading:
+			text += "\nAmmo: RELOADING..."
+		else:
+			text += "\nAmmo: " + str(player.ammo) + "/" + str(player.max_ammo)
+		text += "\nReserve: " + str(player.reserve_ammo)
+		text += "\n" + ("ADS: ON" if player.is_aiming else "ADS: OFF")
+	elif player.current_tool == "block_placer":
 		text += "\nRotation: " + str(player.block_rotation) + "°"
+		text += "\nBlock Type: " + player.current_block_type.to_upper()
 	
 	inventory_label.text = text
 
