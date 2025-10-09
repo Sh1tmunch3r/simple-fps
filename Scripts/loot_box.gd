@@ -1,8 +1,10 @@
 extends StaticBody3D
 
-# Lootable box that can be interacted with to gain items
-# Can only be looted once per box
-# Syncs state across all clients in multiplayer
+# Loot Box - Interactive container with multiplayer sync
+# Players can loot once per box by pressing F
+# Contains blocks, Block2, items, and ammo
+# Looted state syncs across all clients to prevent duplicate looting
+# Visual feedback: gold when lootable, gray when looted
 
 @export var loot_blocks: int = 5  # Number of blocks to give
 @export var loot_block2: int = 3  # Number of Block2 to give

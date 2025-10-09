@@ -1,5 +1,13 @@
 extends CharacterBody3D
 
+# Enhanced Player Controller with PvP, Building, and Gun Mechanics
+# Features:
+# - Health and damage system for PvP combat
+# - Block placement with Block2 support
+# - Gun mechanics: ADS, reloading, ammo management
+# - Multiplayer synchronization via RPCs
+# - Inventory system for multiple item types
+
 @export var speed := 6.0
 @export var jump_velocity := 4.0
 @export var mouse_sensitivity := 0.002
@@ -72,12 +80,14 @@ func _input(event):
 			place_block()
 	
 	# ADS (Aim Down Sights) - hold right click
-	if event.is_action_pressed("aim") and current_tool == "gun" and not is_reloading:
-		is_aiming = true
-		apply_ads()
-	elif event.is_action_released("aim"):
-		is_aiming = false
-		remove_ads()
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.pressed and current_tool == "gun" and not is_reloading and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+				is_aiming = true
+				apply_ads()
+			elif not event.pressed:
+				is_aiming = false
+				remove_ads()
 	
 	# Tool switching with number keys
 	if event is InputEventKey and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -154,6 +164,8 @@ func shoot():
 	var bullet_scene = preload("res://Scenes/Bullet.tscn")
 	var bullet = bullet_scene.instantiate()
 	bullet.global_transform = bullet_spawn.global_transform
+	bullet.shooter_id = multiplayer.get_unique_id()
+	bullet.damage = 20.0 if is_aiming else 15.0  # More damage when aiming
 	get_tree().current_scene.add_child(bullet)
 
 func switch_tool(tool: String):
@@ -174,6 +186,14 @@ func pickup_block(block_type: String = "blocks"):
 		update_inventory_ui()
 	else:
 		print("[Player] Unknown item type: ", block_type)
+
+func pickup_gun(ammo: int, reserve: int):
+	# Called when player picks up a gun/ammo pickup
+	ammo += ammo
+	reserve_ammo += reserve
+	inventory["guns"] += 1
+	print("[Player] Picked up gun! Got ", ammo, " ammo and ", reserve, " reserve ammo")
+	update_inventory_ui()
 
 func place_block():
 	# Place a block using raycast from camera
