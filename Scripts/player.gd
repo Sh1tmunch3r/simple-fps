@@ -1,5 +1,13 @@
 extends CharacterBody3D
 
+# Enhanced Player Controller with PvP, Building, and Gun Mechanics
+# Features:
+# - Health and damage system for PvP combat
+# - Block placement with Block2 support
+# - Gun mechanics: ADS, reloading, ammo management
+# - Multiplayer synchronization via RPCs
+# - Inventory system for multiple item types
+
 @export var speed := 6.0
 @export var jump_velocity := 4.0
 @export var mouse_sensitivity := 0.002
@@ -10,22 +18,39 @@ extends CharacterBody3D
 
 var gravity := 9.8
 
+# Health and PvP system
+@export var max_health := 100.0
+var health := 100.0
+var is_dead := false
+
 # Block placement system
 var current_tool := "gun"  # "gun" or "block_placer"
 const BLOCK_SIZE := Vector3(0.64, 0.092, 0.155)  # Size of one block for grid snapping
+const BLOCK2_SIZE := Vector3(0.5, 0.5, 0.5)  # Size of Block2 for grid snapping
 const PLACEMENT_DISTANCE := 5.0  # Maximum distance for block placement
 const REMOVAL_DISTANCE := 5.0  # Maximum distance for block removal
 
 # Inventory system - supports multiple item types
 var inventory := {
 	"blocks": 0,
+	"block2": 0,
 	"red_blocks": 0,
 	"blue_blocks": 0,
-	"items": 0
+	"items": 0,
+	"guns": 0
 }
 
 # Current block rotation (in 90-degree increments)
 var block_rotation := 0  # 0, 90, 180, 270
+var current_block_type := "blocks"  # "blocks" or "block2"
+
+# Gun mechanics
+var is_aiming := false
+var ammo := 30
+var max_ammo := 30
+var reserve_ammo := 90
+var is_reloading := false
+const RELOAD_TIME := 2.0
 
 func _ready():
 	# Add to players group for UI to find
@@ -42,6 +67,11 @@ func _ready():
 func _input(event):
 	if not is_multiplayer_authority():
 		return
+	
+	# Don't process input if dead
+	if is_dead:
+		return
+	
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		camera.rotate_x(-event.relative.y * mouse_sensitivity)
@@ -49,10 +79,20 @@ func _input(event):
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if event.is_action_pressed("shoot") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		if current_tool == "gun":
+		if current_tool == "gun" and not is_reloading:
 			shoot()
 		elif current_tool == "block_placer":
 			place_block()
+	
+	# ADS (Aim Down Sights) - hold right click
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.pressed and current_tool == "gun" and not is_reloading and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+				is_aiming = true
+				apply_ads()
+			elif not event.pressed:
+				is_aiming = false
+				remove_ads()
 	
 	# Tool switching with number keys
 	if event is InputEventKey and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -60,6 +100,9 @@ func _input(event):
 			switch_tool("gun")
 		elif event.keycode == KEY_2 and event.pressed:
 			switch_tool("block_placer")
+		# Reload gun
+		elif event.keycode == KEY_R and event.pressed and current_tool == "gun":
+			reload_gun()
 		# Block rotation
 		elif event.keycode == KEY_R and event.pressed and current_tool == "block_placer":
 			rotate_block()
@@ -69,10 +112,19 @@ func _input(event):
 		# Interact with objects (like loot boxes)
 		elif event.keycode == KEY_F and event.pressed:
 			interact_with_object()
+		# Switch block type when in block placer mode
+		elif event.keycode == KEY_Q and event.pressed and current_tool == "block_placer":
+			switch_block_type()
 
 func _physics_process(delta):
 	if not is_multiplayer_authority():
 		return
+	
+	# Don't allow movement if dead
+	if is_dead:
+		velocity = Vector3.ZERO
+		return
+	
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	if Input.is_action_just_pressed("jump") and is_on_floor():
@@ -88,10 +140,43 @@ func _physics_process(delta):
 	move_and_slide()
 
 func shoot():
-	print("[Player] Shooting from peer: ", multiplayer.get_unique_id())
+	if is_dead or is_reloading:
+		return
+	
+	if ammo <= 0:
+		print("[Player] Out of ammo! Press R to reload")
+		return
+	
+	ammo -= 1
+	print("[Player] Shooting from peer: ", multiplayer.get_unique_id(), " | Ammo: ", ammo, "/", max_ammo)
+	
+	# Raycast to check for hit
+	var space_state = get_world_3d().direct_space_state
+	var origin = camera.global_position
+	var end = origin + (-camera.global_transform.basis.z * 100.0)
+	
+	var query = PhysicsRayQueryParameters3D.new()
+	query.from = origin
+	query.to = end
+	query.collision_mask = 3
+	query.collide_with_bodies = true
+	
+	var result = space_state.intersect_ray(query)
+	
+	if result and result.collider:
+		var hit_object = result.collider
+		# Check if we hit another player
+		if hit_object.has_method("take_damage"):
+			var damage = 20.0 if is_aiming else 15.0  # More damage when aiming
+			print("[Player] Hit player: ", hit_object.name, " for ", damage, " damage")
+			hit_object.take_damage.rpc(damage, multiplayer.get_unique_id())
+	
+	# Spawn visual bullet for feedback
 	var bullet_scene = preload("res://Scenes/Bullet.tscn")
 	var bullet = bullet_scene.instantiate()
 	bullet.global_transform = bullet_spawn.global_transform
+	bullet.shooter_id = multiplayer.get_unique_id()
+	bullet.damage = 20.0 if is_aiming else 15.0  # More damage when aiming
 	get_tree().current_scene.add_child(bullet)
 
 func switch_tool(tool: String):
@@ -113,10 +198,18 @@ func pickup_block(block_type: String = "blocks"):
 	else:
 		print("[Player] Unknown item type: ", block_type)
 
+func pickup_gun(ammo_amount: int, reserve_amount: int):
+	# Called when player picks up a gun/ammo pickup
+	ammo = min(ammo + ammo_amount, max_ammo)
+	reserve_ammo += reserve_amount
+	inventory["guns"] += 1
+	print("[Player] Picked up gun! Got ", ammo_amount, " ammo and ", reserve_amount, " reserve ammo")
+	update_inventory_ui()
+
 func place_block():
 	# Place a block using raycast from camera
-	if inventory["blocks"] <= 0:
-		print("[Player] No blocks to place!")
+	if inventory[current_block_type] <= 0:
+		print("[Player] No ", current_block_type, " to place!")
 		return
 	
 	# Raycast from camera to find placement position
@@ -135,14 +228,15 @@ func place_block():
 		var placement_pos = result.position
 		var hit_normal = result.normal
 		
-		# Snap to grid and handle stacking
+		# Snap to grid and handle stacking based on block type
 		placement_pos = snap_to_grid(placement_pos, hit_normal)
 		
 		# Check for overlapping blocks before placing
 		if not is_position_occupied(placement_pos):
-			spawn_placed_block(placement_pos, block_rotation)
-			inventory["blocks"] -= 1
-			print("[Player] Placed block at ", placement_pos, ". Remaining: ", inventory["blocks"])
+			# Sync block placement across network
+			spawn_placed_block_rpc.rpc(placement_pos, block_rotation, current_block_type)
+			inventory[current_block_type] -= 1
+			print("[Player] Placed ", current_block_type, " at ", placement_pos, ". Remaining: ", inventory[current_block_type])
 			update_inventory_ui()
 		else:
 			print("[Player] Position occupied, cannot place block")
@@ -154,18 +248,19 @@ func snap_to_grid(pos: Vector3, normal: Vector3) -> Vector3:
 	# If placing on top (normal pointing up), stack vertically
 	# Otherwise snap to nearest grid position
 	
+	var block_size = BLOCK2_SIZE if current_block_type == "block2" else BLOCK_SIZE
 	var snapped_pos = pos
 	
 	if normal.y > 0.7:  # Placing on top surface
 		# Stack on top - align to grid and add block height
-		snapped_pos.x = round(pos.x / BLOCK_SIZE.x) * BLOCK_SIZE.x
-		snapped_pos.z = round(pos.z / BLOCK_SIZE.z) * BLOCK_SIZE.z
-		snapped_pos.y = pos.y + BLOCK_SIZE.y / 2
+		snapped_pos.x = round(pos.x / block_size.x) * block_size.x
+		snapped_pos.z = round(pos.z / block_size.z) * block_size.z
+		snapped_pos.y = pos.y + block_size.y / 2
 	else:
 		# Placing on side or other surface - snap to grid
-		snapped_pos.x = round(pos.x / BLOCK_SIZE.x) * BLOCK_SIZE.x
-		snapped_pos.y = round(pos.y / BLOCK_SIZE.y) * BLOCK_SIZE.y
-		snapped_pos.z = round(pos.z / BLOCK_SIZE.z) * BLOCK_SIZE.z
+		snapped_pos.x = round(pos.x / block_size.x) * block_size.x
+		snapped_pos.y = round(pos.y / block_size.y) * block_size.y
+		snapped_pos.z = round(pos.z / block_size.z) * block_size.z
 	
 	return snapped_pos
 
@@ -174,9 +269,10 @@ func is_position_occupied(pos: Vector3) -> bool:
 	var space_state = get_world_3d().direct_space_state
 	
 	# Create a small box shape to check for overlaps
+	var block_size = BLOCK2_SIZE if current_block_type == "block2" else BLOCK_SIZE
 	var query = PhysicsShapeQueryParameters3D.new()
 	var shape = BoxShape3D.new()
-	shape.size = BLOCK_SIZE * 0.9  # Slightly smaller to avoid false positives
+	shape.size = block_size * 0.9  # Slightly smaller to avoid false positives
 	query.shape = shape
 	query.transform = Transform3D(Basis(), pos)
 	query.collision_mask = 3
@@ -190,14 +286,22 @@ func is_position_occupied(pos: Vector3) -> bool:
 	
 	return false
 
-func spawn_placed_block(pos: Vector3, rotation_angle: int = 0):
+@rpc("any_peer", "call_local")
+func spawn_placed_block_rpc(pos: Vector3, rotation_angle: int = 0, block_type: String = "blocks"):
 	# Spawn a placed block at the given position with rotation
-	var placed_block_scene = preload("res://Scenes/PlacedBlock.tscn")
+	# This is synced across all clients via RPC
+	var placed_block_scene
+	if block_type == "block2":
+		placed_block_scene = preload("res://Scenes/PlacedBlock2.tscn")
+	else:
+		placed_block_scene = preload("res://Scenes/PlacedBlock.tscn")
+	
 	var placed_block = placed_block_scene.instantiate()
 	placed_block.global_position = pos
 	# Apply rotation around Y axis
 	placed_block.rotation_degrees.y = rotation_angle
 	get_tree().current_scene.add_child(placed_block)
+	print("[Player] Spawned ", block_type, " at ", pos, " for all clients")
 
 func remove_block():
 	# Remove a block that the player is looking at
@@ -258,3 +362,95 @@ func interact_with_object():
 			hit_object.interact(self)
 		else:
 			print("[Player] Cannot interact with this object")
+
+# PvP Health and Damage System
+@rpc("any_peer", "call_local")
+func take_damage(damage: float, attacker_id: int):
+	if is_dead:
+		return
+	
+	health -= damage
+	print("[Player] Took ", damage, " damage. Health: ", health, "/", max_health)
+	
+	if health <= 0:
+		die(attacker_id)
+
+func die(killer_id: int):
+	is_dead = true
+	health = 0
+	
+	if is_multiplayer_authority():
+		print("[Player] You were killed by peer: ", killer_id)
+	else:
+		print("[Player] Peer ", name, " was killed by peer: ", killer_id)
+	
+	# Hide player model and disable controls
+	visible = false
+	
+	# Respawn after delay
+	if is_multiplayer_authority():
+		print("[Player] Respawning in 3 seconds...")
+		await get_tree().create_timer(3.0).timeout
+		respawn()
+
+func respawn():
+	is_dead = false
+	health = max_health
+	ammo = max_ammo
+	is_aiming = false
+	is_reloading = false
+	visible = true
+	
+	# Random respawn position
+	global_position = Vector3(randf_range(-10, 10), 2, randf_range(-10, 10))
+	
+	if is_multiplayer_authority():
+		print("[Player] You respawned at ", global_position, " with full health")
+		# Reset camera FOV if stuck in ADS
+		if camera:
+			camera.fov = 70
+
+# Gun Mechanics
+func reload_gun():
+	if is_reloading or ammo >= max_ammo:
+		print("[Player] Cannot reload right now")
+		return
+	
+	if reserve_ammo <= 0:
+		print("[Player] No reserve ammo!")
+		return
+	
+	is_reloading = true
+	print("[Player] Reloading... (", RELOAD_TIME, "s)")
+	
+	await get_tree().create_timer(RELOAD_TIME).timeout
+	
+	var ammo_needed = max_ammo - ammo
+	var ammo_to_reload = min(ammo_needed, reserve_ammo)
+	
+	ammo += ammo_to_reload
+	reserve_ammo -= ammo_to_reload
+	
+	is_reloading = false
+	print("[Player] Reload complete! Ammo: ", ammo, "/", max_ammo, " | Reserve: ", reserve_ammo)
+
+func apply_ads():
+	# Apply ADS effect - zoom in camera FOV
+	if camera:
+		camera.fov = 50  # Zoomed in FOV (default is usually 70-75)
+		print("[Player] Aiming down sights")
+
+func remove_ads():
+	# Remove ADS effect - restore normal FOV
+	if camera:
+		camera.fov = 70  # Normal FOV
+		print("[Player] Stopped aiming")
+
+func switch_block_type():
+	# Switch between block types
+	if current_block_type == "blocks":
+		current_block_type = "block2"
+		print("[Player] Switched to Block2 (", inventory["block2"], " available)")
+	else:
+		current_block_type = "blocks"
+		print("[Player] Switched to regular blocks (", inventory["blocks"], " available)")

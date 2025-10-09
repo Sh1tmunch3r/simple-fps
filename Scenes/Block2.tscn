@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://c8j3rkokm1yei"]
+
+[ext_resource type="Script" path="res://Scripts/block.gd" id="2_block"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_block2"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_block2"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="Block2" type="Area3D"]
+script = ExtResource("2_block")
+block_type = "block2"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_block2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_block2")
