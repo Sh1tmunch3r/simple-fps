@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqw5y6xk8g8yh"]
+
+[ext_resource type="Script" path="res://Scripts/loot_box.gd" id="1_loot_box"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_lootbox"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lootbox"]
+size = Vector3(1, 1, 1)
+
+[node name="LootBox" type="StaticBody3D"]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_loot_box")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_lootbox")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_lootbox")
