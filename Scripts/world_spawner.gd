@@ -33,10 +33,16 @@ func _ready():
 		spawn_pickup_block2s()
 		spawn_loot_boxes()
 		spawn_gun_pickups()
+		print("[WorldSpawner] Server finished spawning all items")
 	else:
 		print("[WorldSpawner] Client - requesting world state from server...")
+		# Wait a moment for server to finish spawning before requesting
+		await get_tree().create_timer(0.5).timeout
 		# Request world state from server
-		request_world_state.rpc_id(1)
+		if multiplayer.has_multiplayer_peer():
+			request_world_state.rpc_id(1)
+		else:
+			print("[WorldSpawner] ERROR: Lost connection before requesting world state")
 
 @rpc("any_peer", "call_remote")
 func request_world_state():

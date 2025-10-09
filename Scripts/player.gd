@@ -67,6 +67,11 @@ func _ready():
 func _input(event):
 	if not is_multiplayer_authority():
 		return
+	
+	# Don't process input if dead
+	if is_dead:
+		return
+	
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		camera.rotate_x(-event.relative.y * mouse_sensitivity)
@@ -114,6 +119,12 @@ func _input(event):
 func _physics_process(delta):
 	if not is_multiplayer_authority():
 		return
+	
+	# Don't allow movement if dead
+	if is_dead:
+		velocity = Vector3.ZERO
+		return
+	
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	if Input.is_action_just_pressed("jump") and is_on_floor():
@@ -187,12 +198,12 @@ func pickup_block(block_type: String = "blocks"):
 	else:
 		print("[Player] Unknown item type: ", block_type)
 
-func pickup_gun(ammo: int, reserve: int):
+func pickup_gun(ammo_amount: int, reserve_amount: int):
 	# Called when player picks up a gun/ammo pickup
-	ammo += ammo
-	reserve_ammo += reserve
+	ammo = min(ammo + ammo_amount, max_ammo)
+	reserve_ammo += reserve_amount
 	inventory["guns"] += 1
-	print("[Player] Picked up gun! Got ", ammo, " ammo and ", reserve, " reserve ammo")
+	print("[Player] Picked up gun! Got ", ammo_amount, " ammo and ", reserve_amount, " reserve ammo")
 	update_inventory_ui()
 
 func place_block():
@@ -367,25 +378,37 @@ func take_damage(damage: float, attacker_id: int):
 func die(killer_id: int):
 	is_dead = true
 	health = 0
-	print("[Player] Died! Killed by peer: ", killer_id)
+	
+	if is_multiplayer_authority():
+		print("[Player] You were killed by peer: ", killer_id)
+	else:
+		print("[Player] Peer ", name, " was killed by peer: ", killer_id)
 	
 	# Hide player model and disable controls
 	visible = false
 	
 	# Respawn after delay
-	await get_tree().create_timer(3.0).timeout
-	respawn()
+	if is_multiplayer_authority():
+		print("[Player] Respawning in 3 seconds...")
+		await get_tree().create_timer(3.0).timeout
+		respawn()
 
 func respawn():
 	is_dead = false
 	health = max_health
 	ammo = max_ammo
+	is_aiming = false
+	is_reloading = false
 	visible = true
 	
 	# Random respawn position
 	global_position = Vector3(randf_range(-10, 10), 2, randf_range(-10, 10))
 	
-	print("[Player] Respawned at ", global_position, " with full health")
+	if is_multiplayer_authority():
+		print("[Player] You respawned at ", global_position, " with full health")
+		# Reset camera FOV if stuck in ADS
+		if camera:
+			camera.fov = 70
 
 # Gun Mechanics
 func reload_gun():
