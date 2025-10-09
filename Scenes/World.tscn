@@ -1,8 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://72bcmcc7o0i"]
+[gd_scene load_steps=5 format=3 uid="uid://72bcmcc7o0i"]
 
 [ext_resource type="Script" uid="uid://bopnfdveky5vf" path="res://Scripts/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://chjsy4xnke7tw" path="res://Scenes/Player.tscn" id="2_player"]
-[ext_resource type="PackedScene" uid="uid://xj7rkokm1yei" path="res://Scenes/block.tscn" id="3_5nsto"]
+[ext_resource type="Script" path="res://Scripts/world_spawner.gd" id="3_spawner"]
+[ext_resource type="PackedScene" uid="uid://c3x8k7m9n2p4q" path="res://Scenes/InventoryUI.tscn" id="4_inventory"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -17,17 +18,11 @@ size = Vector3(50, 1, 50)
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 5)
 shadow_enabled = true
 
-[node name="Block" parent="." instance=ExtResource("3_5nsto")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 5)
+[node name="WorldSpawner" type="Node3D" parent="."]
+script = ExtResource("3_spawner")
+num_pickup_blocks = 10
+num_loot_boxes = 3
+spawn_radius = 20.0
+spawn_height = 0.5
 
-[node name="Block2" parent="." instance=ExtResource("3_5nsto")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.5, 5)
-
-[node name="Block3" parent="." instance=ExtResource("3_5nsto")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, -5)
-
-[node name="Block4" parent="." instance=ExtResource("3_5nsto")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.5, -5)
-
-[node name="Block5" parent="." instance=ExtResource("3_5nsto")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+[node name="InventoryUI" parent="." instance=ExtResource("4_inventory")]
